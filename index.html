@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10101b">
+  <meta name="description" content="NEXA AI STUDIO - image, video and voice creation studio">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <title>NEXA AI STUDIO</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brandmark">N</span><div><b>NEXA</b><small>AI STUDIO</small></div></div>
+    <span class="status"><i></i> CREATIVE STUDIO</span>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">YOUR CREATIVE AI WORKSPACE</p>
+      <h1>Imagine it.<br><span>Create it.</span></h1>
+      <p class="sub">Turn your ideas into images, videos and voice.</p>
+    </section>
+
+    <nav class="tabs" aria-label="Generator">
+      <button class="tab active" data-mode="image">▧ <span>Image</span></button>
+      <button class="tab" data-mode="video">▷ <span>Video</span></button>
+      <button class="tab" data-mode="voice">♫ <span>Voice</span></button>
+    </nav>
+
+    <section class="panel">
+      <div class="panelhead"><div><p class="eyebrow" id="mode-kicker">IMAGE GENERATOR</p><h2 id="mode-title">Create an image</h2></div><span class="pill" id="mode-pill">TEXT TO IMAGE</span></div>
+      <label for="prompt">Your prompt</label>
+      <textarea id="prompt" rows="5" placeholder="Describe what you want to create..."></textarea>
+      <div class="hint" id="mode-hint">Be descriptive: subject, style, lighting, camera and mood.</div>
+      <div class="row" id="voice-options" hidden>
+        <label class="selectlabel" for="voice-lang">Voice language</label>
+        <select id="voice-lang"><option value="en-US">English (US)</option><option value="en-GB">English (UK)</option><option value="hi-IN">Hindi</option><option value="gu-IN">Gujarati</option></select>
+      </div>
+      <button class="primary" id="generate">Generate image <span>↗</span></button>
+      <p class="notice" id="notice">Image/video generation needs a connected AI provider. Voice preview uses your phone's built-in speech engine.</p>
+    </section>
+
+    <section class="result panel">
+      <div class="resulthead"><h2>Creation preview</h2><span class="pill muted" id="result-status">READY</span></div>
+      <div id="output" class="output">
+        <div class="placeholder"><div class="spark">✦</div><b>Your creation appears here</b><small>Write a prompt above to get started.</small></div>
+      </div>
+      <a id="download" class="download" hidden download>Download result</a>
+    </section>
+
+    <section class="tip"><b>✦ Creator tip</b><p>Good prompts explain the subject, visual style, lighting, camera angle and mood. Avoid asking for too many unrelated things at once.</p></section>
+  </main>
+
+  <footer>© 2026 NEXA AI STUDIO <span>MADE FOR CREATORS</span></footer>
+  <script src="app.js"></script>
+</body>
+</html>

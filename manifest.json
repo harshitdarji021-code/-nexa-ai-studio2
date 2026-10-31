@@ -1,0 +1,10 @@
+{
+  "name": "NEXA AI STUDIO",
+  "short_name": "NEXA AI",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0c0c14",
+  "theme_color": "#10101b",
+  "description": "AI image, video and voice creative studio",
+  "icons": []
+}
