@@ -1,4 +1,4 @@
-const API_BASE = ""; // Set this to your deployed backend URL, e.g. https://your-space.hf.space
+const API_BASE = "https://nexa-ai-studio-api-k3u1.onrender.com";
 let mode = "image";
 const $ = (id) => document.getElementById(id);
 const copy = {
