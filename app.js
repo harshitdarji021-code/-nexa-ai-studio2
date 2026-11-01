@@ -9,7 +9,7 @@ const copy = {
     "IMAGE GENERATOR",
     "Create an image",
     "TEXT TO IMAGE",
-    "Be descriptive: subject, style, lighting, camera and mood.",
+    "Image generation is not connected yet.",
     "Generate image"
   ],
 
@@ -17,7 +17,7 @@ const copy = {
     "VIDEO GENERATOR",
     "Create a video",
     "TEXT TO VIDEO",
-    "Describe the scene, movement, camera motion, duration and visual style.",
+    "Describe the scene, movement, camera motion and visual style.",
     "Generate video"
   ],
 
@@ -30,201 +30,129 @@ const copy = {
   ]
 };
 
-
-/* =========================
-   MODE / TAB SWITCHING
-========================= */
-
-document.querySelectorAll(".tab").forEach((btn) => {
-
-  btn.addEventListener("click", () => {
-
-    mode = btn.dataset.mode;
-
-    document.querySelectorAll(".tab").forEach((b) => {
-      b.classList.toggle("active", b === btn);
-    });
-
-    $("mode-kicker").textContent = copy[mode][0];
-    $("mode-title").textContent = copy[mode][1];
-    $("mode-pill").textContent = copy[mode][2];
-    $("mode-hint").textContent = copy[mode][3];
-
-    $("generate").innerHTML =
-      copy[mode][4] + ' <span>↗</span>';
-
-    $("voice-options").hidden = mode !== "voice";
-
-    $("notice").textContent =
-      mode === "voice"
-        ? "Voice preview uses your Android browser's installed speech voices."
-        : "AI generation is connected to the NEXA backend.";
-  });
-
-});
-
-
-/* =========================
-   MESSAGE / PLACEHOLDER
-========================= */
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
 
 function showMessage(message, status = "INFO") {
-
   $("output").innerHTML = `
     <div class="placeholder">
       <div class="spark">✦</div>
-      <b>${escapeHtml(String(message))}</b>
+      <b>${escapeHtml(message)}</b>
     </div>
   `;
 
   $("result-status").textContent = status;
-
   $("download").hidden = true;
-  $("download").removeAttribute("href");
 }
-
-
-/* =========================
-   HTML ESCAPE
-========================= */
-
-function escapeHtml(s) {
-
-  return String(s).replace(
-    /[&<>"']/g,
-    (c) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[c])
-  );
-
-}
-
-
-/* =========================
-   DOWNLOAD BUTTON
-========================= */
-
-function setupDownload(url, filename) {
-
-  $("download").href = url;
-  $("download").download = filename;
-  $("download").hidden = false;
-  $("download").textContent = "Download creation";
-
-}
-
-
-/* =========================
-   DISPLAY VIDEO
-========================= */
 
 function showVideo(videoUrl) {
-
   $("output").innerHTML = `
     <video
       src="${videoUrl}"
       controls
       playsinline
-      preload="metadata"
-      style="
-        width:100%;
-        max-width:900px;
-        border-radius:16px;
-        display:block;
-        background:#000;
-      ">
-    </video>
+      style="width:100%; max-width:100%; border-radius:16px; display:block;"
+    ></video>
   `;
 
-  setupDownload(
-    videoUrl,
-    "nexa-ai-generated-video.mp4"
-  );
+  $("download").href = videoUrl;
+  $("download").download = "nexa-ai-video.mp4";
+  $("download").textContent = "Download video";
+  $("download").hidden = false;
 
   $("result-status").textContent = "COMPLETE";
+}
 
+function updateModeUI() {
+  $("mode-kicker").textContent = copy[mode][0];
+  $("mode-title").textContent = copy[mode][1];
+  $("mode-pill").textContent = copy[mode][2];
+  $("mode-hint").textContent = copy[mode][3];
+
+  $("generate").innerHTML =
+    copy[mode][4] + ' <span>↗</span>';
+
+  if ($("voice-options")) {
+    $("voice-options").hidden = mode !== "voice";
+  }
+
+  if ($("notice")) {
+    if (mode === "video") {
+      $("notice").textContent =
+        "Connected to NEXA AI STUDIO video generation backend.";
+    } else if (mode === "voice") {
+      $("notice").textContent =
+        "Voice preview uses your device's browser speech system.";
+    } else {
+      $("notice").textContent =
+        "Image generation is not connected yet. Video generation is ready.";
+    }
+  }
+
+  showMessage(
+    mode === "video"
+      ? "Write a prompt and generate your AI video."
+      : mode === "voice"
+      ? "Write text and generate a voice preview."
+      : "Video generation is currently available."
+  );
 }
 
 
-/* =========================
-   DISPLAY IMAGE
-========================= */
+// TAB SWITCHING
+document.querySelectorAll(".tab").forEach((button) => {
+  button.addEventListener("click", () => {
+    mode = button.dataset.mode;
 
-function showImage(imageUrl) {
+    document
+      .querySelectorAll(".tab")
+      .forEach((tab) => {
+        tab.classList.toggle("active", tab === button);
+      });
 
-  $("output").innerHTML = `
-    <img
-      src="${escapeHtml(imageUrl)}"
-      alt="Generated image"
-      style="
-        width:100%;
-        max-width:900px;
-        border-radius:16px;
-        display:block;
-      "
-    >
-  `;
-
-  setupDownload(
-    imageUrl,
-    "nexa-ai-generated-image"
-  );
-
-  $("result-status").textContent = "COMPLETE";
-
-}
+    updateModeUI();
+  });
+});
 
 
-/* =========================
-   GENERATE BUTTON
-========================= */
-
+// GENERATE BUTTON
 $("generate").addEventListener("click", async () => {
 
   const prompt = $("prompt").value.trim();
 
-  /* Empty prompt */
-
   if (!prompt) {
-
-    showMessage(
-      "Please write a prompt first.",
-      "INFO"
-    );
-
+    showMessage("Please write a prompt first.", "ERROR");
     return;
   }
 
 
-  /* =========================
-     VOICE MODE
-  ========================= */
-
+  // VOICE
   if (mode === "voice") {
 
     const synth = window.speechSynthesis;
 
     if (!synth) {
-
       showMessage(
         "Speech synthesis is not supported in this browser.",
         "ERROR"
       );
-
       return;
     }
 
     synth.cancel();
 
-    const utterance =
-      new SpeechSynthesisUtterance(prompt);
+    const utterance = new SpeechSynthesisUtterance(prompt);
 
-    utterance.lang =
-      $("voice-lang").value;
+    if ($("voice-lang")) {
+      utterance.lang = $("voice-lang").value;
+    }
 
     utterance.rate = 0.92;
 
@@ -233,14 +161,13 @@ $("generate").addEventListener("click", async () => {
     };
 
     utterance.onend = () => {
-      $("result-status").textContent =
-        "VOICE PREVIEWED";
+      $("result-status").textContent = "VOICE PREVIEWED";
     };
 
     synth.speak(utterance);
 
     showMessage(
-      "Your phone is speaking the text. This is a voice preview, not an MP3 download.",
+      "Your device is speaking the text.",
       "VOICE"
     );
 
@@ -248,44 +175,31 @@ $("generate").addEventListener("click", async () => {
   }
 
 
-  /* =========================
-     BACKEND CHECK
-  ========================= */
-
-  if (!API_BASE) {
-
+  // IMAGE
+  if (mode === "image") {
     showMessage(
-      "Backend not connected yet.",
-      "SETUP NEEDED"
+      "Image generation is not connected yet. Please use the Video tab.",
+      "NOT AVAILABLE"
     );
-
     return;
   }
 
 
-  /* =========================
-     BUTTON LOADING
-  ========================= */
-
+  // VIDEO
   const button = $("generate");
 
   button.disabled = true;
+  button.textContent = "Creating video...";
 
-  button.innerHTML =
-    "Creating... <span>⏳</span>";
+  $("result-status").textContent = "WORKING";
 
-  $("result-status").textContent =
-    "CONNECTING";
+  showMessage(
+    "NEXA AI is creating your video. Please wait...",
+    "GENERATING"
+  );
 
 
   try {
-
-    /* =========================
-       SEND REQUEST TO FASTAPI
-    ========================= */
-
-    $("result-status").textContent =
-      "GENERATING";
 
     const response = await fetch(
       `${API_BASE}/api/generate`,
@@ -297,172 +211,94 @@ $("generate").addEventListener("click", async () => {
         },
 
         body: JSON.stringify({
-
-          mode: mode,
-
           prompt: prompt,
-
-          aspect_ratio:
-            mode === "video"
-              ? "16:9"
-              : undefined,
-
-          resolution:
-            mode === "video"
-              ? "720p"
-              : undefined
+          mode: "video",
+          aspect_ratio: "16:9",
+          resolution: "720p"
         })
       }
     );
 
 
-    /* =========================
-       READ RESPONSE
-    ========================= */
-
     let data;
 
     try {
-
       data = await response.json();
-
-    } catch (jsonError) {
-
+    } catch {
       throw new Error(
         "Backend returned an invalid response."
       );
-
     }
 
 
-    /* =========================
-       BACKEND ERROR
-    ========================= */
-
     if (!response.ok) {
-
       throw new Error(
         data.detail ||
         data.message ||
-        `Server error (${response.status})`
+        `Server error: ${response.status}`
       );
-
     }
 
 
-    /* =========================
-       VIDEO RESPONSE
-    ========================= */
+    // BACKEND RETURNS:
+    // data.video = data:video/mp4;base64,...
 
-    if (
-      mode === "video" &&
-      data.video
-    ) {
+    if (data.video) {
 
       showVideo(data.video);
 
-      return;
-    }
-
-
-    /* =========================
-       OLD / URL VIDEO RESPONSE
-    ========================= */
-
-    if (
-      mode === "video" &&
-      data.output_url
-    ) {
+    } else if (data.output_url) {
 
       showVideo(data.output_url);
 
-      return;
+    } else {
+
+      throw new Error(
+        data.message ||
+        "Video was not returned by the AI provider."
+      );
     }
-
-
-    /* =========================
-       IMAGE RESPONSE
-    ========================= */
-
-    if (
-      mode === "image" &&
-      data.output_url
-    ) {
-
-      showImage(data.output_url);
-
-      return;
-    }
-
-
-    /* =========================
-       BASE64 IMAGE RESPONSE
-    ========================= */
-
-    if (
-      mode === "image" &&
-      data.image
-    ) {
-
-      showImage(data.image);
-
-      return;
-    }
-
-
-    /* =========================
-       NO RESULT
-    ========================= */
-
-    showMessage(
-      data.message ||
-      "The provider returned no media.",
-      "CHECK RESULT"
-    );
 
 
   } catch (error) {
 
-    console.error(
-      "NEXA AI generation error:",
-      error
-    );
+    console.error("NEXA AI ERROR:", error);
 
     showMessage(
       error.message ||
-      "Something went wrong while generating.",
+      "Video generation failed.",
       "ERROR"
     );
-
 
   } finally {
 
     button.disabled = false;
 
     button.innerHTML =
-      copy[mode][4] +
-      ' <span>↗</span>';
-
+      copy[mode][4] + ' <span>↗</span>';
   }
 
 });
 
 
-/* =========================
-   SERVICE WORKER
-========================= */
-
+// SERVICE WORKER
 if ("serviceWorker" in navigator) {
 
-  window.addEventListener(
-    "load",
-    () => {
+  window.addEventListener("load", () => {
 
-      navigator.serviceWorker
-        .register("./sw.js")
-        .catch(() => {});
+    navigator.serviceWorker
+      .register("./sw.js")
+      .catch((error) => {
+        console.log(
+          "Service worker registration failed:",
+          error
+        );
+      });
 
-    }
-  );
+  });
 
 }
+
+
+// INITIAL UI
+updateModeUI();
